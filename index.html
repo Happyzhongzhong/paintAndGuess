@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>socketChat</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script>
+        var username = prompt('请输入您本次游戏的名字','');//感觉好像没什么区别
+        var room = parseInt(window.prompt('请输入您加入房间的编号'));//可以将输入的字符串解析
+    </script>
+    <style>
+        body{
+            border: 0;
+            margin: 0;
+        }
+        .cont{
+            position: relative;
+            min-height: 100vh;
+            padding-bottom: 95px;
+            box-sizing: border-box;
+        }
+        .list {
+            height: 65px;
+            line-height: 65px;
+            border-bottom: 1px solid #F2F2F2;
+            text-align: center;
+            font-size: 15px;
+            background-color: #ffffff;
+        }
+        .btn {
+            position: fixed;
+            text-align: center;
+            bottom: 0;
+            font-size: 16px;
+            color: #FFFFFF;
+            margin: 25px 0;
+            width: 150px;
+            height: 45px;
+            line-height: 45px;
+            background: #E0E0E0;
+            border-radius: 5px;
+            background-color: #1B68FD;
+            left: 80%;
+            transform: translateX(-50%);
+        }
+        .content {
+            position: fixed;
+            bottom: 0;
+            margin: 25px 10px;
+            left: 25%;
+            height: 45px;
+            width: 400px;
+        }
+    </style>
+</head>
+<body>
+    <div>目前您所在的房间号：<script>document.write(room);</script></div>
+    <div class = "cont">
+        <div class="list" id="chat">
+        </div>
+        <form id="messageForm">
+            <input type="text" class="content" id="message">
+            <input type="submit" class="btn">
+        </form>
+    </div>
+    <script>
+        $(function(){
+            const socket = io.connect();
+            const $messageForm = $('#messageForm');
+            const $message = $('#message');
+            const $chat = $('#chat');
+            socket.emit('roomnum', room);
+
+            $messageForm.submit(function(e){
+                e.preventDefault();//防止网页刷新
+                socket.emit('send message', $message.val());
+                $message.val('');//清空一下message
+            });
+
+            socket.on('new message', function(data){
+                $chat.append('<div class="list">' + data.msg + '</div>');
+            }) 
+        })
+    </script>
+    
+</body>
+</html>
