@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Painter</title>
+    <style>
+        .content {
+            width: 880px;
+            height: 550px;
+            background-color: darkgrey;
+            margin: 0 auto;
+            padding: 10px;
+        }
+        #canvas {
+            background-color: white;
+        }
+        #tool {
+            height: 100px;
+            background-color: bisque;
+        }
+        #tool li {
+            float: left;
+            width: 200px;
+            text-align: center;
+        }
+        li {
+            list-style: none;
+        }
+    </style>
+</head>
+<body>
+    <section class="content">
+        <ul id="tool">
+            <li>
+                <li>
+                    <form action="http://localhost/downer/down.php" id="myForm" method="POST">
+                        <input type="hidden"  id="data" value="" name="data">
+                        <button id="saving" onclick="save()">保存图片</button>
+                    </form>
+                </li>
+                    
+                <li>
+                    <button id="clearing" onclick="clearing()">清空</button>
+                </li>
+            </li>
+            <li id="pen" onclick = "penOn(0)">
+                画笔
+            </li>
+            <li id="eraser" onclick = "eraserOn(1)">
+                橡皮
+            </li> 
+        </ul>
+        <canvas id="canvas" width="880" height="420">
+            <!-- 这里并不建议用css对canvas进行width\height样式设置，否则会有错误出现 -->
+            您的浏览器不支持canvas。
+        </canvas>
+        <script src="onlinecanvas.js"></script>
+    </section>
+</body>
+</html>

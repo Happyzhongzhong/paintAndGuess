@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <canvas width="o500" height="500" id="canvas">
+        您的浏览器当前版本不支持Canvas标签
+    </canvas>
+    <script>
+        //获取画布Dom
+        var canvas = document.getElementById('canvas');
+        //设置绘图环境
+        var cxt = canvas.getContext('2d');
+        //画一条线段
+        cxt.lineWidth = 10;
+        // cxt.strokestyle = ...设置颜色
+        // cxt.fillstyle = ...设置填充色
+
+        cxt.moveTo(20,20);//左上角是（0，0）往右走20，往下走20.现在这个代码是将“笔”放在了（20，20）的位置
+        cxt.lineTo(100,20);//指挥动作，并没有开始画
+        cxt.stroke();
+        cxt.closePath();
+        //注意：每画完一个路径需要封闭一次路径，否则下一个路径会和上一个连起来
+        cxt.beginPath();
+        //注意：每画一个新的路径需要打开一次路径
+        cxt.arc(200,200,50,0,360,false)//(圆心，半径，开始角度，结束角度，是否逆时针)
+        cxt.fill();
+        //矩形不是路径
+        cxt.rec(300,20,100,100);
+
+        cxt.font = '40px 黑体';
+        cxt.fillText('啦啦啦',20,300);
+        
+        //插入图像
+        var img = new Image();
+        img.src = '';
+        cxt.drawImage(img,20,370,230,306);//（对象，位置，尺寸）
+
+        cxt.save();//保存旋转环境到二次元
+        cxt.translate(20,20);//在异次元空间重置原点位置，因为旋转式按照原点来旋转的
+        cxt.rotate(30*Math.PI/180);
+        cxt.beginPath();
+        cxt.moveTo(0,0);//注意：由于修改了（0，0）点，所以这下面所有的参数都需要相对新的（0，0）点定位
+        cxt.lineTo();
+        cxt.stroke();
+        cxt.restore();
+        
+
+
+        
+
+    </script>
+</body>
+</html>

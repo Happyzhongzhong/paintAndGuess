@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <canvas id="demo" width="400" height="500" style="border: 1px solid red">
+
+    </canvas>
+    <script>
+         var canvas = document.getElementById('demo');
+        //设置绘图环境
+        var cxt = canvas.getContext('2d');
+        var flag = 0;
+        canvas.onmousedown = function(evt){
+            evt = window.event?window.event:evt;//存在则是IE，不存在则不是。这一步是整合鼠标事件，提升兼容性。
+            var startX = evt.pageX - this.offsetLeft;
+            var startY = evt.pageY - this.offsetTop;
+            cxt.beginPath();
+            cxt.moveTo(startX,startY);
+            flag = 1;
+        }
+        canvas.onmousemove = function(evt){
+            evt = window.event?window.event:evt;
+            var endX = evt.pageX - this.offsetLeft;
+            var endY = evt.pageY - this.offsetTop;
+            //注意：这里需要提前判断一下鼠标是否已经按下，否则会有Bug
+            if(flag){
+                cxt.lineTo(endX,endY);
+            cxt.stroke();
+            }
+            
+        }
+        canvas.onmouseup = function(){
+            flag = 0;
+        }
+        canvas.onmouseout = function(){
+            flag = 0;
+        }
+    </script>
+</body>
+</html>

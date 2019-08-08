@@ -72,7 +72,7 @@
             const $messageForm = $('#messageForm');
             const $message = $('#message');
             const $chat = $('#chat');
-            socket.emit('roomnum', room);
+            socket.emit('roomNum', room);
 
             $messageForm.submit(function(e){
                 e.preventDefault();//防止网页刷新

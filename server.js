@@ -5,10 +5,6 @@ const server = require('http').createServer(app);
 
 const io = require('socket.io').listen(server);
 
-app.use(express.static(path.join(__dirname, 'public')));
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'hbs');
-
 user = [];
 connections = [];
 
@@ -20,6 +16,7 @@ app.get('/', function(req, res){
 });
 
 io.sockets.on('connection', function(socket){
+    var roomNum;
 
     connections.push(socket);
     console.log('a user is connected: %s intotal', connections.length);
@@ -31,10 +28,17 @@ io.sockets.on('connection', function(socket){
         io.sockets.emit('new message', {msg: '一位用户退出游戏,' + '目前：' + connections.length + '人在线'});
 
     });
-    socket.io('roomnum', )
+
+    socket.on('roomNum', function(data){
+        socket.join(data, function () {
+            console.log('一位用户加入' + data + '房间');
+            roomNum = data;
+        })
+    });
 
     socket.on('send message', function(data){
-        io.sockets.emit('new message', {msg: data});
-    })
+        io.sockets.in(roomNum).emit('new message', {msg:data});
+        console.log(roomNum);
+    });
 
-})
+});
