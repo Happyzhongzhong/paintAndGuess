@@ -10,12 +10,14 @@
     <script>
         var username = prompt('请输入您本次游戏的名字','');//感觉好像没什么区别
         var room = parseInt(window.prompt('请输入您加入房间的编号'));//可以将输入的字符串解析
+        var character = '';
+        var yesOrNo = confirm("请选择您想要扮演的角色（注意：画者最多两名，按取消键即视为不参与画画）"); //在页面上弹出确认对话框
+        if(yesOrNo)
+            character = '画者，你需要在游戏开始后，根据系统消息画画';
+        else
+            character = '猜者，你需要在游戏开始后，根据画者所画内容进行猜谜';
     </script>
     <style>
-        body{
-            border: 0;
-            margin: 0;
-        }
         .cont{
             position: relative;
             min-height: 100vh;
@@ -23,12 +25,14 @@
             box-sizing: border-box;
         }
         .list {
-            height: 65px;
-            line-height: 65px;
+            width: 250px;
+            line-height: 30px;
             border-bottom: 1px solid #F2F2F2;
-            text-align: center;
+            text-align: left;
             font-size: 15px;
-            background-color: #ffffff;
+            background-color: #FFFFFF;
+            position: relative;
+            left: 70%;
         }
         .btn {
             position: fixed;
@@ -37,52 +41,221 @@
             font-size: 16px;
             color: #FFFFFF;
             margin: 25px 0;
-            width: 150px;
+            width: 90px;
             height: 45px;
             line-height: 45px;
             background: #E0E0E0;
             border-radius: 5px;
             background-color: #1B68FD;
-            left: 80%;
+            left: 90%;
             transform: translateX(-50%);
         }
-        .content {
+        .content1 {
             position: fixed;
             bottom: 0;
+            left: 65%;
             margin: 25px 10px;
-            left: 25%;
             height: 45px;
-            width: 400px;
+            width: 200px;
+        }
+        .content {
+            width: 700px;
+            height: 700px;
+            background-color: darkgrey;
+            padding: 10px;
+            position: relative;
+            z-index: 3;
+            /* 这个z-index的debug太恐怖了，我一开始真的完全没有察觉到这一点 */
+        }
+        #canvas {
+            background-color: white;
+        }
+        #tool {
+            height: 50px;
+            background-color: bisque;
+        }
+        #tool li {
+            float: left;
+            width: 200px;
+            text-align: center;
+        }
+        li {
+            list-style: none;
+        }
+        #chat {
+            position: relative;
+            bottom: 600px;
         }
     </style>
 </head>
 <body>
     <div>目前您所在的房间号：<script>document.write(room);</script></div>
-    <div class = "cont">
-        <div class="list" id="chat">
-        </div>
+    <div>您的角色是：<script>document.write(character);</script></div>
+    <!-- 画板部分 -->
+    <section class="content" id="drawer">
+            <ul id="tool">
+                <li>
+                    <li>
+                        <form action="http://localhost/downer/down.php" id="myForm" method="POST">
+                            <input type="hidden"  id="data" value="" name="data">
+                            <button id="saving" onclick="save()">保存图片</button>
+                        </form>
+                    </li>
+                        
+                    <li>
+                        <button id="clearing" onclick="clearing()">清空</button>
+                    </li>
+                </li>
+                <li id="pen" onclick = "penOn(0)">
+                    画笔
+                </li>
+                <li id="eraser" onclick = "eraserOn(1)">
+                    橡皮
+                </li> 
+            </ul>
+            <canvas id="canvas" width="680" height="620">
+                <!-- 这里并不建议用css对canvas进行width\height样式设置，否则会有错误出现 -->
+                您的浏览器不支持canvas。
+            </canvas>
+            <script>
+                var socket = io.connect();
+                var canvas = document.getElementById('canvas');
+                //设置绘图环境
+                var cxt = canvas.getContext('2d');
+
+                var pen = document.getElementById('pen');
+                var eraser = document.getElementById('eraser');
+                var actions = [pen, eraser];//这样是为了让pen和eraser中间只能选择一个
+
+                penOn(0);
+
+                function setStaus(Arr, num, type){
+                    for(var i=0; i<Arr.length; i++){
+                        if(i == num){
+                            Arr[i].style.background = 'yellow';
+                        }
+                        else{
+                            Arr[i].style.background = 'bisque';
+                        }
+                    }
+                }
+                function penOn(num){
+                    //pen的函数
+                    setStaus(actions,num,1)
+                    cxt.strokestyle = 'black';
+                    cxt.fillestyle = 'black';
+                    var flag = 0;
+                    canvas.onmousedown = function(evt){
+                        evt = window.event?window.event:evt;//存在则是IE，不存在则不是。这一步是整合鼠标事件，提升兼容性。
+                        var startX = evt.pageX - this.offsetLeft;
+                        var startY = evt.pageY - this.offsetTop - 50;
+                        cxt.beginPath();
+                        cxt.moveTo(startX,startY);
+                        flag = 1;
+                    }
+                    canvas.onmousemove = function(evt){
+                        evt = window.event?window.event:evt;
+                        var endX = evt.pageX - this.offsetLeft;
+                        var endY = evt.pageY - this.offsetTop - 50;
+                        //注意：这里需要提前判断一下鼠标是否已经按下，否则会有Bug
+                        if(flag){
+                            cxt.lineTo(endX,endY);
+                            cxt.stroke();
+                        }
+                        
+                    }
+                    canvas.onmouseup = function(){
+                        flag = 0;
+                        cxt.closePath();
+                        var imageData1 = canvas.toDataURL();
+                        var b641 = imageData1.substring(22);//从data协议的第22位开始取
+                        socket.emit('new draw', imageData1);
+                    }
+                    canvas.onmouseout = function(){
+                        flag = 0;
+                        cxt.closePath();
+                    }
+                }
+                function eraserOn(num){
+                    setStaus(actions,num,1)
+                    flag = 0;
+                    canvas.onmousedown = function(evt){
+                        evt = window.event? window.event:evt;//存在则是IE，不存在则不是。这一步是整合鼠标事件，提升兼容性。
+                        var start1X = evt.pageX - this.offsetLeft;
+                        var start1Y = evt.pageY - this.offsetTop - 50;
+                        cxt.clearRect(start1X-10,start1Y-10,20,20);//擦除专用函数
+                        flag = 1;
+                    }
+                    canvas.onmousemove = function(evt){
+                        evt = window.event?window.event:evt;
+                        var start1X = evt.pageX - this.offsetLeft;
+                        var start1Y = evt.pageY - this.offsetTop - 50;
+                        
+                        //注意：这里需要提前判断一下鼠标是否已经按下，否则会有Bug
+                        if(flag){
+                            cxt.clearRect(start1X-10,start1Y-10,20,20);//擦除专用函数
+                        }
+                        
+                    }
+                    canvas.onmouseup = function(){
+                        flag = 0;
+                        var imageData1 = canvas.toDataURL();
+                        var b641 = imageData1.substring(22);//从data协议的第22位开始取
+                        socket.emit('new draw', b641);
+                    }
+                    canvas.onmouseout = function(){
+                        flag = 0;
+                    }
+                }
+                function save(){
+                    var imageData = canvas.toDataURL();
+                    var b64 = imageData.substring(22);//从data协议的第22位开始取
+                    var data = document.getElementById('data');
+                    data.value = b64;//将表单提交到后台
+                    var form = document.getElementById('myForm');
+                    form.submit();
+                }
+                function clearing(){
+                    cxt.clearRect(0,0,880,400);
+                }
+            </script>            
+    </section>
+    <!-- 上面是画板 -->
+    <img id="drawCanvas" width="680px" height="620px">
+    <div class = "cont" id="chat">
         <form id="messageForm">
-            <input type="text" class="content" id="message">
+            <input type="text" class="content1" id="message">
             <input type="submit" class="btn">
         </form>
     </div>
     <script>
+        var drawCanvas = document.getElementById('drawCanvas');
+        var drawer = document.getElementById('drawer');
+        if(character == '画者，你需要在游戏开始后，根据系统消息画画')
+            drawCanvas.style.display = 'none';
+        else
+            drawer.style.display = 'none';
         $(function(){
-            const socket = io.connect();
+            var socket = io.connect();
             const $messageForm = $('#messageForm');
             const $message = $('#message');
             const $chat = $('#chat');
             socket.emit('roomNum', room);
-
+            socket.emit('character', character);
             $messageForm.submit(function(e){
                 e.preventDefault();//防止网页刷新
                 socket.emit('send message', $message.val());
                 $message.val('');//清空一下message
             });
-
             socket.on('new message', function(data){
                 $chat.append('<div class="list">' + data.msg + '</div>');
-            }) 
+                console.log('收到消息');
+            });
+            socket.on('draw new', function(data){
+                console.log('收到图片');
+                // data = atob(data);
+                $("#drawCanvas").attr('src', data);
+            });
         })
     </script>
     

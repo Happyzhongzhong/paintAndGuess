@@ -84,6 +84,7 @@ function eraserOn(num){
 function save(){
     var imageData = canvas.toDataURL();
     var b64 = imageData.substring(22);//从data协议的第22位开始取
+    alert(imageData);
     var data = document.getElementById('data');
     data.value = b64;//将表单提交到后台
     var form = document.getElementById('myForm');
